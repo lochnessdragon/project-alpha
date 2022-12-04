@@ -1,0 +1,5 @@
+{
+    "tile_width": 16,
+    "tile_height": 16,
+    "solid": [1, 2, 3]
+}
