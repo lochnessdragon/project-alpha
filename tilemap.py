@@ -13,7 +13,8 @@ class Tilemap(object):
     def __init__(self, spriteset: SpriteSet, x: int, y: int, width: int, height: int):
         self.spriteset = spriteset
         self.position = pygame.Vector2(x, y)
-        self.scale = 3  # temp variable until I get camera's implemented
+        self.position.y -= 16*4
+        self.scale = 4  # temp variable until I get cameras implemented
         self._width = width
         self._height = height
         self.tiles = [[1 for x in range(width)] for x in range(height)]
@@ -24,7 +25,7 @@ class Tilemap(object):
         self.tiles[y][x] = id
 
     def get_tile(self, x: int, y: int) -> int:
-        if x > self._width or y > self._height:
+        if x > self._width or y > self._height or x < 0 or y < 0:
             raise ValueError("The X and Y provided are out of range.")
         return self.tiles[y][x]
     

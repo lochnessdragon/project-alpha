@@ -1,0 +1,5 @@
+Player 1, 6
+Bot B, 5
+Bot E, 4
+Bot C, 3
+Bot A, 2

@@ -21,9 +21,12 @@ class Entity:
     
     def update(self, deltaTime: float, tilemap: Tilemap):
         # update physics
-        self.collider.update(deltaTime / 10, tilemap)
+        self.collider.update(deltaTime, tilemap)
     
     def render(self):
+        if self.collider.draw:
+            self.renderer.draw_color = Color(255, 0, 0, 255)
+            self.renderer.draw_rect(self.transform)
         self.texture.draw(dstrect = self.transform, angle=self.angle, origin=self.origin, flipX=self.flipX, flipY=self.flipY)
 
 class Player(Entity):
@@ -31,9 +34,11 @@ class Player(Entity):
         super().__init__(renderer, assets_dir + "/img/player.png")
         self.transform.width = 64
         self.transform.height = 64
-        self.speed = 1
-        self.max_speed = 5
-        self.jump_force = 25
+        self.transform.y = 64 * 3
+        #self.collider.draw = True
+        self.speed = 5
+        self.max_speed = 25
+        self.jump_force = 40
     
     def update(self, deltaTime: float, tilemap: Tilemap):
         super().update(deltaTime, tilemap)
@@ -47,12 +52,13 @@ class Player(Entity):
             self.collider.velocity.x += self.speed
             self.collider.velocity.x = min(self.max_speed,  self.collider.velocity.x)
         if pressed_keys[K_UP]:
-            self.collider.velocity.y += self.jump_force
+            if self.collider.grounded:
+                self.collider.velocity.y -= self.jump_force # up is negative (yes, its confusing)
         
         # flip player
         if self.collider.velocity.x < 0:
             self.flipX = True
-        else:
+        elif self.collider.velocity.x > 0:
             self.flipX = False
 
         # dampen velocity

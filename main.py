@@ -36,7 +36,7 @@ renderer = Renderer(window, accelerated=1, vsync=True)
 
 # game objects
 player = Player(renderer, assets_dir)
-tilemap = Tilemap.from_file(assets_dir + "/levels/level_01", tilemap_dir, renderer)
+tilemap = Tilemap.from_file(assets_dir + "/levels/level_00", tilemap_dir, renderer)
 #ball = TestBall(renderer, assets_dir)
 
 # used to track elapsed frame time

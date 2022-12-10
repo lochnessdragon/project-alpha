@@ -1,5 +1,5 @@
 [keymaps]
-move_left = 
-move_right = 
-move_up = 
-move_down = 
+move_left = 1
+move_right = 2
+move_up = 3
+move_down = 4
