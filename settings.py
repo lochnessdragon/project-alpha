@@ -1,4 +1,5 @@
 from enum import Enum
+import types
 
 import tomli
 import tomli_w
@@ -13,13 +14,23 @@ class TOMLType(Enum):
     TIME = 6
     DATETIME = 7
     ARRAY = 8
+    TABLE = 9
 
+'''
+Represents either one setting or a group of settings for a tree like fashion
+'''
 class Settings:
-    # def __init__(self):
-    #     self.deserialize()
+    def __init__(self, name=None, desc, type=TOMLType.TABLE, default_value=None):
+        ''''''
+        self.deserialize()
 
-    def add_setting(self, name: str, default_value, type):
-        self.name = default_value
+    def add_setting(self, name: str, desc: str, default_value, type):
+        parts = name.split(".")
+        for part in parts:
+            print(part)
+        self.__dict__[name] = default_value
+        # self["keymaps"]["move_left"]
+
 
     def restore_defaults():
         # set default values
@@ -36,13 +47,13 @@ class Settings:
             print("Invalid settings.toml file")
             self.restore_defaults()
         return
-    
+
     def serialize(self):
-        
-        return 
+
+        return
 
 if __name__ == "__main__":
     settings = Settings()
-    settings.add_setting("keymaps.move_left", TOMLType.INTEGER, K_LEFT)
-    settings.deserialize()
+    settings.add_setting("keymaps.move_left", "Key binding to move left", TOMLType.INTEGER, K_LEFT)
+    # settings.deserialize()
     print(settings.keymaps.move_left)

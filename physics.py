@@ -45,6 +45,7 @@ class PhysicsCollider:
             player_rect_test_y = self.entity.transform.move(0, self.velocity.y * adjTime)
 
             # check for collisions on the y axis
+            # positive is down
             velocity_y_sign=sign(self.velocity.y)
             if velocity_y_sign != 0:
                 tilemap_y_adj=tilemap_y_coord + velocity_y_sign
@@ -52,10 +53,10 @@ class PhysicsCollider:
                 for x in range(-1, 2):
                     tilemap_x_adj = tilemap_x_coord + x
                     try:
-                        if tilemap.is_soild(tilemap_x_adj, tilemap_y_adj):
+                        if tilemap.is_solid(tilemap_x_adj, tilemap_y_adj):
                             # check collision
                             tile_rect=Rect((tilemap_x_adj * tile_size.x) + tilemap.position.x, (tilemap_y_adj * tile_size.y) + tilemap.position.y, tile_size.x, tile_size.y)
-                            # print(tile_rect)
+                            # check for the players collision
                             if player_rect_test_y.colliderect(tile_rect):
                                 # set the player's y position to be right on top of the block
                                 if velocity_y_sign > 0: # i.e. we hit the block on our bottom
@@ -63,16 +64,18 @@ class PhysicsCollider:
                                 else: # we hit the block on our top
                                     self.entity.transform.y = tile_rect.y + tile_rect.height - 1
                                 self.velocity.y = 0
-                                self.grounded = True
                     except:
                         continue
-            
-            # set grounded flag to true
-            # try:
-            #     if tilemap.is_solid(tilemap_x_coord, tilemap_y_coord + 1):
-            #         self.grounded = True
-            # except:
-            #     print("Player out of bounds")
+
+            # check if the player is grounded
+            try:
+                y_mod = self.entity.transform.y % tile_size.y
+                print(str(y_mod))
+                close_to_ground = y_mod < (tile_size.y / 4) # arbitrary check to see if the player is within a few pixels of the ground
+                if tilemap.is_solid(tilemap_x_coord, tilemap_y_coord + 1) and close_to_ground:
+                    self.grounded = True
+            except:
+                pass # required here to prevent syntax error
 
             # check for collisions on the x axis
             velocity_x_sign = sign(self.velocity.x)
@@ -82,7 +85,7 @@ class PhysicsCollider:
                 for y in range(-1, 2):
                     tilemap_y_adj = tilemap_y_coord + y
                     try:
-                        if tilemap.is_soild(tilemap_x_adj, tilemap_y_adj):
+                        if tilemap.is_solid(tilemap_x_adj, tilemap_y_adj):
                             # check collision
                             tile_rect=Rect((tilemap_x_adj * tile_size.x) + tilemap.position.x, (tilemap_y_adj * tile_size.y) + tilemap.position.y, tile_size.x, tile_size.y)
                             # print(tile_rect)

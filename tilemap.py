@@ -28,8 +28,8 @@ class Tilemap(object):
         if x > self._width or y > self._height or x < 0 or y < 0:
             raise ValueError("The X and Y provided are out of range.")
         return self.tiles[y][x]
-    
-    def is_soild(self, x: int, y: int) -> bool:
+
+    def is_solid(self, x: int, y: int) -> bool:
         return self.get_tile(x, y) in self.spriteset.solid_tiles
 
     @staticmethod
