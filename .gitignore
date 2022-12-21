@@ -1,1 +1,4 @@
 __pycache__
+
+# ignore venv (even though replit thinks we should use it)
+venv
