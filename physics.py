@@ -70,7 +70,6 @@ class PhysicsCollider:
             # check if the player is grounded
             try:
                 y_mod = self.entity.transform.y % tile_size.y
-                print(str(y_mod))
                 close_to_ground = y_mod < (tile_size.y / 4) # arbitrary check to see if the player is within a few pixels of the ground
                 if tilemap.is_solid(tilemap_x_coord, tilemap_y_coord + 1) and close_to_ground:
                     self.grounded = True

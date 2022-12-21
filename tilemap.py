@@ -5,16 +5,18 @@ from pygame.locals import *
 from pygame._sdl2.video import Renderer
 
 from spriteset import SpriteSet
+from camera import Camera
 
 
 class Tilemap(object):
     """Tilemap: manages and displays tiles in a map."""
 
-    def __init__(self, spriteset: SpriteSet, x: int, y: int, width: int, height: int):
+    def __init__(self, spriteset: SpriteSet, x: int, y: int, width: int,
+                 height: int):
         self.spriteset = spriteset
         self.position = pygame.Vector2(x, y)
-        self.position.y -= 16*4
-        self.scale = 4  # temp variable until I get cameras implemented
+        self.position.y -= 16 * 4
+        #self.scale = 4  # temp variable until I get cameras implemented
         self._width = width
         self._height = height
         self.tiles = [[1 for x in range(width)] for x in range(height)]
@@ -41,16 +43,20 @@ class Tilemap(object):
 
         if not "tilemap" in data.keys():
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the tilemap key.")
+                f"Tilemap file: {json_filename} doesn't contain the tilemap key."
+            )
         if not "width" in data.keys():
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the width key.")
+                f"Tilemap file: {json_filename} doesn't contain the width key."
+            )
         if not "height" in data.keys():
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the height key.")
+                f"Tilemap file: {json_filename} doesn't contain the height key."
+            )
         if not "tiles" in data.keys():
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the tiles key.")
+                f"Tilemap file: {json_filename} doesn't contain the tiles key."
+            )
 
         tilemap_filename = tilemap_dir + data["tilemap"]
         map_width = data["width"]
@@ -60,7 +66,8 @@ class Tilemap(object):
         tiles_data_len = len(data["tiles"])
         if tiles_data_len != (map_width * map_height):
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the correct number of tiles. Expected: {map_width * map_height} Actual: {tiles_data_len}")
+                f"Tilemap file: {json_filename} doesn't contain the correct number of tiles. Expected: {map_width * map_height} Actual: {tiles_data_len}"
+            )
 
         sprite_set = SpriteSet.from_file(tilemap_filename, renderer)
         tilemap = Tilemap(sprite_set, 0, 0, map_width, map_height)
@@ -72,10 +79,15 @@ class Tilemap(object):
 
         return tilemap
 
-    def render(self):
+    def render(self, camera: Camera):
         """Renders the tilemap to the screen"""
         for y in range(len(self.tiles)):
             for x in range(len(self.tiles[y])):
-                rect = Rect(self.position.x + (x * self.spriteset.tile_width * self.scale), self.position.y + (
-                    y * self.spriteset.tile_height * self.scale), self.scale * self.spriteset.tile_width, self.scale * self.spriteset.tile_height)
-                self.spriteset.draw(self.tiles[y][x], rect)
+                rect = Rect(
+                    self.position.x +
+                    (x * self.spriteset.tile_width),
+                    self.position.y +
+                    (y * self.spriteset.tile_height),
+                    self.spriteset.tile_width,
+                    self.spriteset.tile_height)
+                self.spriteset.draw(self.tiles[y][x], camera.transform(rect))
