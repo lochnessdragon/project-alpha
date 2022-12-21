@@ -1,4 +1,5 @@
 import sys, math, os, time
+from enum import Enum
 
 import pygame
 from pygame.locals import *
@@ -6,6 +7,11 @@ from pygame._sdl2.video import Window, Renderer
 from entity import Player, TestBall
 from spriteset import SpriteSet
 from tilemap import Tilemap
+import intro_cutscene as intro
+
+class GameState(Enum):
+    INTRO_SEQ = 1
+    PLAY = 2
 
 # this little line of goodness simply calculates the folder that this file is located in!
 # lots of pain has been caused by this line
@@ -28,7 +34,7 @@ tilemap_dir = assets_dir + "/tilemaps/"
 pygame.init()
 
 # some color defines
-BG = Color(53, 249, 252, 255)
+PLAY_BG = Color(237, 173, 78, 255)
 
 # basic window and renderer
 window = Window("Project Alpha")
@@ -38,6 +44,14 @@ renderer = Renderer(window, accelerated=1, vsync=True)
 player = Player(renderer, assets_dir)
 tilemap = Tilemap.from_file(assets_dir + "/levels/level_00", tilemap_dir, renderer)
 #ball = TestBall(renderer, assets_dir)
+
+# cool fonts
+debug_font = pygame.font.Font(assets_dir + "/font/Kenney Pixel.ttf", 16)
+
+# intro animation object
+intro_scene = intro.IntroCutscene(assets_dir, renderer, debug_font, assets_dir + "/font/Kenney Future.ttf", window.size)
+
+state = GameState.PLAY
 
 # used to track elapsed frame time
 lastTime = time.time()
@@ -55,15 +69,27 @@ while True:
             sys.exit()
 
     # tick
-    player.update(deltaTime, tilemap)
+    if state == GameState.PLAY:
+        player.update(deltaTime, tilemap)
+    elif state == GameState.INTRO_SEQ:
+        if intro_scene.update(deltaTime):
+            # animation is done
+            state = GameState.PLAY
     #ball.update(deltaTime)
 
     # render
-    renderer.draw_color = BG
+    if state == GameState.PLAY:
+        renderer.draw_color = PLAY_BG
+    elif state == GameState.INTRO_SEQ:
+        renderer.draw_color = intro.CLEAR_COLOR
+
     renderer.clear()
 
-    tilemap.render()
-    player.render()
+    if state == GameState.PLAY:
+        tilemap.render()
+        player.render()
+    elif state == GameState.INTRO_SEQ:
+        intro_scene.render()
     #ball.render()
 
     renderer.present()

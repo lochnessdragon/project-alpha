@@ -29,7 +29,8 @@ if __name__ == '__main__':
     CLEAR_COLOR = Color(100, 100, 100, 255)
     camera = EditorCamera()
     button_0_texture = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/button_0.png"))
-    test_patch = ui.NPatchDrawing(button_0_texture, 3, 3, 0, 0, 100, 100)
+    button_0_patch = ui.NPatchDrawing(button_0_texture, 3, 3, 0, 0, 100, 100)
+    test_button = ui.Button(button_0_patch, "Hello, button!")
 
     # editor main loop
     while True:
@@ -38,9 +39,13 @@ if __name__ == '__main__':
                 pygame.quit()
                 sys.exit()
 
+        # tick
+        test_button.update()
+
+        # render
         renderer.draw_color = CLEAR_COLOR
         renderer.clear()
 
-        test_patch.render()
+        button_0_patch.render()
 
         renderer.present()
