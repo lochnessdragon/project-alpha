@@ -94,6 +94,10 @@ show_name_enter_error_timer = 0
 
 # used to track elapsed frame time
 lastTime = time.time()
+
+# used to keep track of the level time (in ms)
+level_time = 5 * 60 * 1000 # 5 minutes
+
 while True:
     # calculate the delta time
     currentTime = time.time()
@@ -107,31 +111,54 @@ while True:
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
-            if state == GameState.HIGH_SCORE_LIST and needs_name_input:
-                # change name
-                # if its a valid character
-                if event.unicode.isprintable():
-                    if len(name) < 5:
-                        name += event.unicode.upper()
+            if state == GameState.HIGH_SCORE_LIST:
+                if needs_name_input:
+                    # change name
+                    # if its a valid character
+                    if event.unicode.isprintable():
+                        if len(name) < 5:
+                            name += event.unicode.upper()
+                    else:
+                        # its a key press
+                        if event.key == K_BACKSPACE:
+                            name = name[:-1]
+                        elif event.key == K_RETURN:
+                            if len(name) == 5:
+                                print(f"User entered name: {name}")
+                                needs_name_input = False
+                                (top_names, top_scores) = high_scores.add_high_score(name, score)
+                            else:
+                                show_name_enter_error_timer = 2000 # two seconds
                 else:
-                    # its a key press
-                    if event.key == K_BACKSPACE:
-                        name = name[:-1]
-                    elif event.key == K_RETURN:
-                        if len(name) == 5:
-                            print(f"User entered name: {name}")
-                            needs_name_input = False
-                            (top_names, top_scores) = high_scores.add_high_score(name, score)
-                        else:
-                            show_name_enter_error_timer = 2000 # two seconds
-
+                    # key press
+                    if event.key == K_r:
+                        # reset level
+                        state = GameState.PLAY
+                        player.transform.x = spawn_pos.x
+                        player.transform.y = spawn_pos.y
+                        name = ""
+                        needs_name_input = False
+                        score = 0
+                        level_time = 5 * 60 * 1000 # 5 minutes
     # tick
     if state == GameState.PLAY:
+        level_time -= deltaTime
         if player.update(deltaTime, tilemap):
-            print("Dead")
             player.transform.x = spawn_pos.x
             player.transform.y = spawn_pos.y
+            name = ""
+            needs_name_input = False
+            score = 0
+            level_time = 5 * 60 * 1000 # 5 minutes
         camera.update(deltaTime)
+        if level_time < 0:
+            # out of time
+            player.transform.x = spawn_pos.x
+            player.transform.y = spawn_pos.y
+            name = ""
+            needs_name_input = False
+            score = 0
+            level_time = 5 * 60 * 1000 # 5 minutes
     elif state == GameState.INTRO_SEQ:
         if intro_scene.update(deltaTime):
             # animation is done
@@ -164,8 +191,19 @@ while True:
         player.render(camera)
 
         # render ui
-        debug_texture = Texture.from_surface(renderer, debug_font.render(f"Camera pos: ({camera.position.x}, {camera.position.y}) Player Pos: ({player.transform.x}, {player.transform.y})", True, WHITE, BLACK))
-        debug_texture.draw(dstrect=debug_texture.get_rect())
+        # debug_texture = Texture.from_surface(renderer, debug_font.render(f"Camera pos: ({camera.position.x}, {camera.position.y}) Player Pos: ({player.transform.x}, {player.transform.y})", True, WHITE, BLACK))
+        # debug_texture.draw(dstrect=debug_texture.get_rect())
+
+        # render score
+        score_texture = Texture.from_surface(renderer, small_score_font.render(f"Score: {score}", True, WHITE))
+        score_texture.draw(dstrect=score_texture.get_rect())
+
+        minutes = int(level_time / (60 * 1000))
+        seconds = int((level_time / 1000) % 60)
+        time_texture = Texture.from_surface(renderer, small_score_font.render(f"Time: {minutes}:{seconds}", True, WHITE))
+        time_texture_rect = time_texture.get_rect()
+        time_texture_rect.x = window.size[0] - time_texture_rect.width
+        time_texture.draw(dstrect=time_texture_rect)
     elif state == GameState.INTRO_SEQ:
         intro_scene.render()
     elif state == GameState.HIGH_SCORE_LIST:
@@ -225,5 +263,10 @@ while True:
                 error_texture_rect.centerx = window.size[0] // 2
                 error_texture_rect.y = window.size[1] - error_texture_rect.height
                 error_texture.draw(dstrect=error_texture_rect)
+        else:
+            restart_prompt = Texture.from_surface(renderer, score_font.render("Press R to restart.", True, WHITE))
+            restart_prompt_rect = restart_prompt.get_rect()
+            restart_prompt_rect.centerx = window.size[0] // 2
+            restart_prompt_rect.centery = (window.size[1] // 6) * 5
 
     renderer.present()
