@@ -21,7 +21,7 @@ class IntroState(Enum):
 
 class IntroCutscene:
     def __init__(self, assets_dir: str, renderer: Renderer, debug_font: pygame.font.Font, main_font_filename: str, screen_size: (int, int)):
-        self.sunrise_audio = pygame.mixer.Sound(assets_dir + "/audio/sunrise.ogg")
+        self.sunrise_audio = pygame.mixer.Sound(assets_dir + "audio/sunrise.ogg")
         self.timer = 0
         self.sunrise_playing = False
         self.renderer = renderer
@@ -40,7 +40,7 @@ class IntroCutscene:
         self.big_text_font = pygame.font.SysFont("Arial", 164, bold=True)
 
         # textures
-        self.capsule_texture = Texture.from_surface(renderer, pygame.image.load(assets_dir + "/img/bg/falling_capsule.png"))
+        self.capsule_texture = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/bg/falling_capsule.png"))
         self.capsule_rect = self.capsule_texture.get_rect()
         self.capsule_rect.width *= 3
         self.capsule_rect.height *= 3
@@ -49,7 +49,7 @@ class IntroCutscene:
         self.capsule_direction = 1
         self.capsule_speed = 2
 
-        self.planet_far_angle = Texture.from_surface(renderer, pygame.image.load(assets_dir + "/img/bg/planet_far_angle.png"))
+        self.planet_far_angle = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/bg/planet_far_angle.png"))
         self.planet_far_angle_rect = self.planet_far_angle.get_rect()
         self.planet_far_angle_rect.width *= 2
         self.planet_far_angle_rect.height *= 2
@@ -66,7 +66,7 @@ class IntroCutscene:
         self.more_text_rect.centerx = screen_size[0] // 2
         self.more_text_rect.centery = screen_size[1] // 2
 
-        self.enable_audio_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "/img/ui/enable_audio_icon.png"))
+        self.enable_audio_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/enable_audio_icon.png"))
         self.audio_icon_rect = self.enable_audio_icon.get_rect()
         self.audio_icon_rect.width *= 3
         self.audio_icon_rect.height *= 3

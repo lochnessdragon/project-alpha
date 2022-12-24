@@ -22,16 +22,25 @@ class Grid:
         self._screen_size = window_size
 
     def render(self, camera: Camera):
-        # this will be a painful method
-
         self.renderer.draw_color = self.grid_color
+
         # draw vertical lines
-        for x in range(int(camera.position.x) % self.grid_spacing,
-                       self._screen_size[0], self.grid_spacing):
+        # custom for loop to avoid numpy dependence
+
+        # technically 0 for a steady camera, but we need an offset from the left of the screen
+        # campos % grid_spacing is the difference between the camera and the correct grid line pos
+        x: float = -camera.position.x * camera.scale #(int(-camera.position.x) % (self.grid_spacing * camera.scale)) * -camera.scale
+
+        max_x = self._screen_size[0]
+        step_x = self.grid_spacing * camera.scale
+        while x <= max_x:
             self.renderer.draw_line((x, 0), (x, self._screen_size[1]))
+            x += step_x
 
         # draw horizontal lines
-        for y in range(int(camera.position.y) % self.grid_spacing,
-                       self._screen_size[1], self.grid_spacing):
+        y = int(camera.position.y) % (self.grid_spacing * camera.scale)
+        max_y = self._screen_size[1]
+        step_y = self.grid_spacing * camera.scale
+        while y <= max_y:
             self.renderer.draw_line((0, y), (self._screen_size[0], y))
-        pass
+            y += step_y

@@ -11,7 +11,6 @@ PhysicsCollider: represents any physical body in the physics world, it will upda
 and handle all body interactions between the object and other objects.
 """
 
-
 class PhysicsCollider:
     def __init__(self, entity):
         self.is_static = False
@@ -29,7 +28,7 @@ class PhysicsCollider:
             self.grounded = False
 
             # commonly used equations
-            tile_size = Vector2(tilemap.spriteset.tile_width * tilemap.scale, tilemap.spriteset.tile_height * tilemap.scale)
+            tile_size = Vector2(tilemap.spriteset.tile_width, tilemap.spriteset.tile_height)
 
             # check if the movement will impact with the tilemap, and if so, clear out velocity and snap player position
 

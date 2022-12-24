@@ -1,5 +1,4 @@
-Player 1, 6
-Bot B, 5
-Bot E, 4
-Bot C, 3
-Bot A, 2
+TEST , 0
+HENRY, 0
+HELLO, 0
+FARTS, 0

@@ -2,7 +2,7 @@ import json
 
 import pygame
 from pygame.locals import *
-from pygame._sdl2.video import Renderer, Texture 
+from pygame._sdl2.video import Renderer, Texture
 
 class SpriteSet(object):
     """
@@ -23,19 +23,23 @@ class SpriteSet(object):
         self.tiles_per_row = int(self.texture.width / tile_width)
         self.tiles_per_col = int(self.texture.height / tile_height)
         self.solid_tiles = []
+        self.deadly_tiles = []
         self._max_tile_id = self.tiles_per_row * self.tiles_per_col
-    
+
+    def get_max_tile_id(self) -> int:
+        return self._max_tile_id
+
     @staticmethod
     def from_file(filename: str, renderer: Renderer):
         """
-        Loads a sprite set from a file, 
+        Loads a sprite set from a file,
         filename references the prefix of the two files (.json and .png) that will describe the tilemap
         e.x. assets/tilemap will translate to assets/tilemap.json and assets/tilemap.png
         """
         json_filename = filename + ".json"
         with open(json_filename) as file:
             data = json.load(file)
-        
+
         if not "tile_width" in data.keys():
             return RuntimeError(f"JSON file: {json_filename} doesn't contain a tile_width key")
         if not "tile_height" in data.keys():
@@ -50,12 +54,18 @@ class SpriteSet(object):
             for id in data["solid"]:
                 sprite_set.solid_tiles.append(id)
 
+        if "deadly" in data.keys():
+            for id in data["deadly"]:
+                sprite_set.deadly_tiles.append(id)
+
         return sprite_set
-    
-    def draw(self, id: int, dest: Rect):
+
+    def draw(self, id: int, dest: Rect, alpha = 255):
         """Renders a tile to the screen, given an id and a destination rectangle."""
         if id > self._max_tile_id:
             raise ValueError(f"Tile id: {id} is outside the range of this tileset<max={self._max_tile_id}>.")
+
+        self.texture.alpha = alpha
 
         tile_x = (id % self.tiles_per_row) * self.tile_width
         tile_y = (id // self.tiles_per_row) * self.tile_height

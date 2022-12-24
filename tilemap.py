@@ -5,45 +5,67 @@ from pygame.locals import *
 from pygame._sdl2.video import Renderer
 
 from spriteset import SpriteSet
-from camera import Camera
+import camera
 
 
 class Tilemap(object):
     """Tilemap: manages and displays tiles in a map."""
 
-    def __init__(self, spriteset: SpriteSet, x: int, y: int, width: int,
+    def __init__(self, spriteset: SpriteSet, tileset_name: str, x: int, y: int, width: int,
                  height: int):
         self.spriteset = spriteset
         self.position = pygame.Vector2(x, y)
-        self.position.y -= 16 * 4
+        # self.position.y -= 16 * 4
         #self.scale = 4  # temp variable until I get cameras implemented
         self._width = width
         self._height = height
         self.tiles = [[1 for x in range(width)] for x in range(height)]
+        self.tileset_name = tileset_name
 
     def set_tile(self, x: int, y: int, id: int):
-        if x > self._width or y > self._height:
-            raise ValueError("The X and Y provided are out of range.")
+        if x >= self._width:
+            # increase the tilemap's range
+            self._width += (x - (self._width - 1))
+            for row in range(self._height):
+                for col in range(self._width):
+                    if col >= len(self.tiles[row]):
+                        self.tiles[row].append(0)
+
+        if y >= self._height:
+            # increase the tilemap's range
+            self._height += (y - (self._height - 1))
+            for row in range(self._height):
+                if row >= len(self.tiles):
+                    self.tiles.append([0 for col in range(self._width)])
         self.tiles[y][x] = id
 
     def get_tile(self, x: int, y: int) -> int:
-        if x > self._width or y > self._height or x < 0 or y < 0:
+        if x >= self._width or y >= self._height or x < 0 or y < 0:
             raise ValueError("The X and Y provided are out of range.")
         return self.tiles[y][x]
 
     def is_solid(self, x: int, y: int) -> bool:
         return self.get_tile(x, y) in self.spriteset.solid_tiles
 
+    def is_deadly(self, x: int, y: int) -> bool:
+        return self.get_tile(x, y) in self.spriteset.deadly_tiles
+
+    # serialization below
+    # yes, I know I could have used Pickle, but I needed to load a texture in, and I don't think pickle can do that
+    # idk tho
     @staticmethod
-    def from_file(filename: str, tilemap_dir: str, renderer: Renderer):
-        """Loads a tilemap from a .json file"""
+    def from_file(filename: str, tileset_dir: str, renderer: Renderer):
+        """
+        Loads a tilemap from a .json file
+        Returns the the tilemap
+        """
         json_filename = filename + ".json"
         with open(json_filename) as file:
             data = json.load(file)
 
-        if not "tilemap" in data.keys():
+        if not "tileset" in data.keys():
             raise ValueError(
-                f"Tilemap file: {json_filename} doesn't contain the tilemap key."
+                f"Tilemap file: {json_filename} doesn't contain the tileset key."
             )
         if not "width" in data.keys():
             raise ValueError(
@@ -58,7 +80,7 @@ class Tilemap(object):
                 f"Tilemap file: {json_filename} doesn't contain the tiles key."
             )
 
-        tilemap_filename = tilemap_dir + data["tilemap"]
+        tileset_filename = tileset_dir + data["tileset"]
         map_width = data["width"]
         map_height = data["height"]
 
@@ -69,8 +91,8 @@ class Tilemap(object):
                 f"Tilemap file: {json_filename} doesn't contain the correct number of tiles. Expected: {map_width * map_height} Actual: {tiles_data_len}"
             )
 
-        sprite_set = SpriteSet.from_file(tilemap_filename, renderer)
-        tilemap = Tilemap(sprite_set, 0, 0, map_width, map_height)
+        sprite_set = SpriteSet.from_file(tileset_filename, renderer)
+        tilemap = Tilemap(sprite_set, data["tileset"], 0, 0, map_width, map_height)
 
         # load tile ids into the map
         for y in range(map_height):
@@ -79,15 +101,40 @@ class Tilemap(object):
 
         return tilemap
 
-    def render(self, camera: Camera):
+    def save(self, filename: str):
+        """
+        save - writes the tilemap to the file specified by the string
+        filename: the file to write the tilemap to
+        """
+
+        json_filename = filename + ".json"
+
+        tile_data = []
+        for y in range(len(self.tiles)):
+            for x in range(len(self.tiles[y])):
+                tile_data.append(self.tiles[y][x])
+
+        json_data = {
+            "tileset": self.tileset_name,
+            "width": self._width,
+            "height": self._height,
+            "tiles": tile_data
+        }
+
+        with open(json_filename, "w") as file:
+            json.dump(json_data, file, indent = "\t")
+
+
+    def render(self, camera):
         """Renders the tilemap to the screen"""
         for y in range(len(self.tiles)):
             for x in range(len(self.tiles[y])):
-                rect = Rect(
-                    self.position.x +
-                    (x * self.spriteset.tile_width),
-                    self.position.y +
-                    (y * self.spriteset.tile_height),
-                    self.spriteset.tile_width,
-                    self.spriteset.tile_height)
-                self.spriteset.draw(self.tiles[y][x], camera.transform(rect))
+                if self.tiles[y][x] != -1: # ignore empty tiles
+                    rect = Rect(
+                        self.position.x +
+                        (x * self.spriteset.tile_width),
+                        self.position.y +
+                        (y * self.spriteset.tile_height),
+                        self.spriteset.tile_width,
+                        self.spriteset.tile_height)
+                    self.spriteset.draw(self.tiles[y][x], camera.transform(rect))

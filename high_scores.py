@@ -1,3 +1,6 @@
+# the high scores module
+# we should limit the players name to 5 uppercase characters
+
 def get_high_scores() -> ([str], [int]):
     """
     get_high_scores - returns a tuple consisting of a sorted list of the all time 5 high scorers and a list of their scores (sorted)
@@ -7,17 +10,25 @@ def get_high_scores() -> ([str], [int]):
     with open("high_scores.txt", "r") as file:
         for line in file:
             data = line.split(",")
-            names.append(data[0])
-            scores.append(int(data[1].strip()))
-        
+            if data[0] != "":
+                names.append(data[0])
+                scores.append(int(data[1].strip()))
+
     return (names, scores)
 
-def add_high_score(name, score):
+def get_score_index(score, scores):
+    """
+    get_score_index - returns the index that a new score should be added at. If its greater than 4, you should ignore the result
+    """
+    pass
+
+def add_high_score(name, score) -> ([str], [int]):
     """
     add_high_score - adds a new name and score to the high scores if the new name and score scored higher than the previous top 5
+    returns the new list
     """
     names, scores = get_high_scores()
-    
+
     insert_location = 0
     for i in range(len(scores)):
         if scores[i] < score:
@@ -34,7 +45,7 @@ def add_high_score(name, score):
                 file.write(names[i] + ", " + str(scores[i]))
                 if i < len(names)-1:
                     file.write("\n")
-    return
+    return (names, scores)
 
 def reset_high_scores():
     """
@@ -44,7 +55,7 @@ def reset_high_scores():
     return
 
 if __name__ == '__main__':
-    passed = True 
+    passed = True
 
     reset_high_scores()
     add_high_score("Bot A", 2)
@@ -70,7 +81,7 @@ if __name__ == '__main__':
     if names[4] != "Bot D" or scores[4] != 1:
         print("Bot D is not in the right place.")
         passed = False
-    
+
     add_high_score("Player 1", 6)
     names, scores = get_high_scores()
     if names[0] != "Player 1" or scores[0] != 6:
@@ -81,4 +92,3 @@ if __name__ == '__main__':
         print("Congratulations, the high score code passed all the tests.")
     else:
         print("Unforunately, it seems that one or more test cases have failed, please try again")
-
