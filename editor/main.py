@@ -46,16 +46,24 @@ if __name__ == '__main__':
     info_font = pygame.font.SysFont("Cascadia Mono", 16)
 
     # icons
+    draw_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/draw_tile_icon.png"))
+    eyedropper_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/eyedropper_icon.png"))
     eraser_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/eraser_icon.png"))
 
     button_0_texture = Texture.from_surface(
         renderer, pygame.image.load(assets_dir + "img/ui/button_0.png"))
     button_0_patch = ui.NPatchDrawing(button_0_texture, 3, 3)
-    test_button = ui.Button(renderer, button_0_patch, button_font,
-                            "Hello, button!", 4,
-                            (255, 255, 255))  # 4px padding
-    test_button.posx = 20
-    test_button.posy = 20
+    button_0_pressed_texture = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/button_0_pressed.png"))
+    button_0_pressed_patch = ui.NPatchDrawing(button_0_pressed_texture, 3, 3)
+    pencil_button = ui.Button(renderer, button_0_patch, button_0_pressed_patch, button_font,
+                            "Pencil", 4,
+                            WHITE)  # 4px padding
+    pencil_button.texture = draw_icon
+    eyedropper_button = ui.Button(renderer, button_0_patch, button_0_pressed_patch, button_font, "Eyedropper", 4, WHITE)
+    eyedropper_button.texture = eyedropper_icon
+    eyedropper_button.posy += pencil_button.transform.height + 10
+
+    buttons = [pencil_button, eyedropper_button]
 
     # editor grid
     grid = grid.Grid(renderer, Color(255, 255, 255, 255), 16, window.size)
@@ -109,12 +117,19 @@ if __name__ == '__main__':
         (left_button, middle_button, right_button) = pygame.mouse.get_pressed(num_buttons=3)
 
         if left_button:
+            # first check any buttons
+            for index in range(len(buttons)):
+                if buttons[index].transform.collidepoint(pygame.mouse.get_pos()):
+                    buttons[index].handle_press()
+            # then add a new tile
             # keep the cursor within bounds
             if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
                 tilemap.set_tile(int(current_tilemap_pos.x), int(current_tilemap_pos.y), brush_tile_id)
 
         # tick
         camera.update(deltaTime)
+        for button in buttons:
+            button.update()
 
         # render
         renderer.draw_color = CLEAR_COLOR
@@ -139,11 +154,16 @@ if __name__ == '__main__':
         grid.render(camera)
 
         # draw ui
+
         tile_pos_texture = Texture.from_surface(renderer, info_font.render(f"Mouse Pos: ({mouse_pos[0]}, {mouse_pos[1]}) Tile Pos: {int(current_tilemap_pos.x)}, {int(current_tilemap_pos.y)}, Tile ID = {brush_tile_id}", True, WHITE, BLACK))
         tile_pos_texture.draw(dstrect = tile_pos_texture.get_rect())
 
         # camera pos ui
         cam_pos_texture = Texture.from_surface(renderer, info_font.render(f"Camera Pos: ({camera.position.x}, {camera.position.y}) Camera Scale: {camera.scale}", True, WHITE, BLACK))
         cam_pos_texture.draw(dstrect=cam_pos_texture.get_rect().move(0, 20))
+
+        # draw buttons
+        for button in buttons:
+            button.render()
 
         renderer.present()
