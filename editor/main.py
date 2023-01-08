@@ -1,4 +1,5 @@
 import sys, math, os, time
+from enum import Enum
 from pathlib import Path
 
 import pygame
@@ -21,6 +22,11 @@ from tilemap import Tilemap
 import ui
 import grid
 
+class BrushType(Enum):
+    PENCIL = 1
+    EYEDROPPER = 2
+    ERASER = 3
+
 if __name__ == '__main__':
     print("Editor v1")
     pygame.init()
@@ -41,6 +47,9 @@ if __name__ == '__main__':
     BLACK = (0, 0, 0)
     camera = EditorCamera(window.size)
 
+    # brush type
+    brush_type = BrushType.PENCIL
+
     # fonts
     button_font = pygame.font.Font(assets_dir + "font/Kenney Blocks.ttf", 12)
     info_font = pygame.font.SysFont("Cascadia Mono", 16)
@@ -55,15 +64,24 @@ if __name__ == '__main__':
     button_0_patch = ui.NPatchDrawing(button_0_texture, 3, 3)
     button_0_pressed_texture = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/button_0_pressed.png"))
     button_0_pressed_patch = ui.NPatchDrawing(button_0_pressed_texture, 3, 3)
+
+    def pencil_button_press:
+        brush_type = BrushType.PENCIL
+    
     pencil_button = ui.Button(renderer, button_0_patch, button_0_pressed_patch, button_font,
                             "Pencil", 4,
-                            WHITE)  # 4px padding
+                            WHITE, pencil_button_press)  # 4px padding
     pencil_button.texture = draw_icon
+
     eyedropper_button = ui.Button(renderer, button_0_patch, button_0_pressed_patch, button_font, "Eyedropper", 4, WHITE)
     eyedropper_button.texture = eyedropper_icon
     eyedropper_button.posy += pencil_button.transform.height + 10
 
-    buttons = [pencil_button, eyedropper_button]
+    eraser_button = ui.Button(renderer, button_0_patch, button_0_pressed_patch, button_font, "Eraser", 4, WHITE)
+    eraser_button.texture = eraser_icon 
+    eraser_button.posy += eyedropper_button.posy + eyedropper_button.transform.height + 10
+
+    buttons = [pencil_button, eyedropper_button, eraser_button]
 
     # editor grid
     grid = grid.Grid(renderer, Color(255, 255, 255, 255), 16, window.size)
@@ -121,11 +139,22 @@ if __name__ == '__main__':
             for index in range(len(buttons)):
                 if buttons[index].transform.collidepoint(pygame.mouse.get_pos()):
                     buttons[index].handle_press()
-            # then add a new tile
-            # keep the cursor within bounds
-            if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
-                tilemap.set_tile(int(current_tilemap_pos.x), int(current_tilemap_pos.y), brush_tile_id)
-
+            # then use the brush
+            if brush_type == BrushType.PENCIL:
+                # keep the cursor within bounds
+                if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
+                    tilemap.set_tile(int(current_tilemap_pos.x), int(current_tilemap_pos.y), brush_tile_id)
+            elif brush_type == BrushType.EYEDROPPER:
+                # keep the cursor within bounds
+                if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
+                    new_tile_id = tilemap.get_tile(int(current_tilemap_pos.x), int(current_tilemap_pos.y))
+                    if new_tile_id > -1:
+                        brush_tile_id = new_tile_id
+            elif brush_type == BrushType.ERASER:
+                # keep the cursor within bounds
+                if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
+                    # -1 is empty space
+                    tilemap.set_tile(int(current_tilemap_pos.x), int(current_tilemap_pos.y), -1)
         # tick
         camera.update(deltaTime)
         for button in buttons:
@@ -143,13 +172,14 @@ if __name__ == '__main__':
         if current_tilemap_pos.x >= 0 and current_tilemap_pos.y >= 0:
             # the rectangle of the current brush position (i.e. the selected tile)
             brush_rect = Rect((((current_tilemap_pos.x * tilemap.spriteset.tile_width) - camera.position.x) * camera.scale) + half_screen_size[0], (((current_tilemap_pos.y * tilemap.spriteset.tile_height) - camera.position.y) * camera.scale) + half_screen_size[1], tilemap.spriteset.tile_width * camera.scale, tilemap.spriteset.tile_height * camera.scale)
-            if brush_tile_id == 0:
-                # draw eraser
-                eraser_icon.alpha = 100
-                eraser_icon.draw(dstrect=brush_rect)
-            else:
+            if brush_type == BrushType.PENCIL:
                 # draw tile transparent
                 tilemap.spriteset.draw(brush_tile_id, brush_rect, 100)
+            elif brush_type == BrushType.EYEDROPPER:
+                eyedropper_icon.draw(dstrect=brush_rect)
+            elif brush_type == BrushType.ERASER:
+                eraser_icon.draw(dstrect=brush_rect)
+                
         # grid overlay
         grid.render(camera)
 

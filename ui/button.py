@@ -14,7 +14,7 @@ class Button:
 
     def __init__(self, renderer: Renderer, npatch: NPatchDrawing, 
                  pressed_npatch: NPatchDrawing, font: pygame.font.Font, 
-                 text: str, padding: int, text_color: (int, int, int)):
+                 text: str, padding: int, text_color: (int, int, int), on_press):
         self.background = npatch
         self.background_pressed = pressed_npatch
         self.is_selected = False
@@ -33,6 +33,8 @@ class Button:
         self.padding = padding
         self.text_color = text_color
         self.text_font = font
+
+        self._on_press = on_press
 
     # getters and setters for the text to update the surface/transform
     @property
@@ -101,3 +103,6 @@ class Button:
 
         # draw text
         self._texture.draw(dstrect=self._texture_rect)
+    
+    def handle_press(self):
+        self._on_press()
