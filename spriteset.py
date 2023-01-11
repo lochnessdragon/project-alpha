@@ -88,7 +88,7 @@ class SpriteSet(object):
 
         return sprite_set
 
-    def draw(self, id: int, dest: Rect, alpha=255):
+    def draw(self, id: int, dest: Rect, alpha=255, angle=0, origin=(0, 0), flipX=False, flipY=False):
         """Renders a tile to the screen, given an id and a destination rectangle."""
         if id > self._max_tile_id:
             raise ValueError(
@@ -96,4 +96,4 @@ class SpriteSet(object):
             )
 
         self.texture.alpha = alpha
-        self.texture.draw(srcrect=self._source_rects[id], dstrect=dest)
+        self.texture.draw(srcrect=self._source_rects[id], dstrect=dest, angle=angle, origin=origin, flipX=flipX, flipY=flipY)

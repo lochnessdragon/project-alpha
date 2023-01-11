@@ -7,16 +7,18 @@ from physics import PhysicsCollider
 from tilemap import Tilemap
 import camera
 import utils
+from spriteset import SpriteSet
 
 """
 Represents a basic "unit" of the game.
 Base class for the player, enemys, platforms, etc. etc.
 """
 class Entity:
-    def __init__(self, renderer: Renderer, texture_filename: Texture):
+    def __init__(self, renderer: Renderer, sprite_sheet: SpriteSet):
         self.renderer = renderer
-        self.texture = Texture.from_surface(renderer, pygame.image.load(texture_filename))
-        self.transform = self.texture.get_rect()
+        self.sprite_sheet = sprite_sheet
+        self.sprite_id = 0
+        self.transform = Rect(0, 0, self.sprite_sheet.tile_width, self.sprite_sheet.tile_height)
         self.flipX = False
         self.flipY = False
         self.origin = (0, 0)
@@ -31,7 +33,7 @@ class Entity:
         if self.collider.draw:
             self.renderer.draw_color = Color(255, 0, 0, 255)
             self.renderer.draw_rect(camera.transform(self.transform))
-        self.texture.draw(dstrect = camera.transform(self.transform), angle=self.angle, origin=self.origin, flipX=self.flipX, flipY=self.flipY)
+        self.sprite_sheet.draw(self.sprite_id, camera.transform(self.transform), angle=self.angle, origin=self.origin, flipX=self.flipX, flipY=self.flipY)
 
 class PlayerUpdate(Enum):
     NONE = 0
@@ -39,9 +41,10 @@ class PlayerUpdate(Enum):
     WON = 2 # has the player reached the end goal
 
 class Player(Entity):
-    def __init__(self, renderer: Renderer, assets_dir: str, tilemap: Tilemap):
-        super().__init__(renderer, assets_dir + "img/player.png")
-        self.transform.y = 16 * 6
+    def __init__(self, renderer: Renderer, assets_dir: str, tilemap: Tilemap, start_pos: pygame.Vector2):
+        super().__init__(renderer, SpriteSet(renderer, assets_dir + "img/spritesheet/explorer_sheet.png", 16, 16))
+        self.transform.x = start_pos.x
+        self.transform.y = start_pos.y
         self.speed = 5
         self.max_speed = 20
         self.jump_force = 15

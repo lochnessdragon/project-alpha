@@ -15,10 +15,12 @@ from camera import PlayerCamera
 import high_scores
 from ui import NPatchDrawing
 
+
 class GameState(Enum):
     INTRO_SEQ = 1
     PLAY = 2
     HIGH_SCORE_LIST = 3
+
 
 # this little line of goodness simply calculates the folder that this file is located in!
 # lots of pain has been caused by this line
@@ -55,9 +57,12 @@ window.set_icon(window_icon)
 renderer = Renderer(window, accelerated=1, vsync=False)
 
 # game objects
-tilemap = Tilemap.from_file(assets_dir + "levels/level_00", tileset_dir, renderer)
-spawn_pos = Vector2(0, 16 * 6)
-player = Player(renderer, assets_dir, tilemap)
+tilemap = Tilemap.from_file(assets_dir + "levels/level_00", tileset_dir,
+                            renderer)
+spawn_pos = Vector2(
+    0, 16 * 6
+)  # hard coded for now but the hope is to make it derive from data files later
+player = Player(renderer, assets_dir, tilemap, spawn_pos)
 camera = PlayerCamera(window.size, player, tilemap)
 
 # cool fonts
@@ -67,16 +72,23 @@ score_font = pygame.font.Font(assets_dir + "font/Kenney Mini.ttf", 32)
 score_header_font = pygame.font.Font(assets_dir + "font/Kenney Mini.ttf", 48)
 
 # intro animation object
-intro_scene = intro.IntroCutscene(assets_dir, renderer, debug_font, assets_dir + "font/Kenney Future.ttf", window.size)
+intro_scene = intro.IntroCutscene(assets_dir, renderer, debug_font,
+                                  assets_dir + "font/Kenney Future.ttf",
+                                  window.size)
 
 # background sprite assets
-earth_image = Texture.from_surface(renderer, pygame.transform.scale(pygame.image.load(assets_dir + "img/bg/earth.png"), (32, 32)))
+earth_image = Texture.from_surface(
+    renderer,
+    pygame.transform.scale(pygame.image.load(assets_dir + "img/bg/earth.png"),
+                           (32, 32)))
 earth_image.alpha = 200
 earth_image_rect = earth_image.get_rect()
 earth_image_rect.centerx = (window.size[0] // 6) * 5
 earth_image_rect.centery = (window.size[1] // 6)
 
-background_image = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/bg/parallax/desert-bg-0.png"))
+background_image = Texture.from_surface(
+    renderer,
+    pygame.image.load(assets_dir + "img/bg/parallax/desert-bg-0.png"))
 background_image_rect = background_image.get_rect()
 background_image_rect.centerx = window.size[0] // 2
 background_image_rect.centery = window.size[1] // 2
@@ -88,7 +100,10 @@ score = 0
 name = ""
 (top_names, top_scores) = high_scores.get_high_scores()
 needs_name_input = True
-name_prompt_bg = NPatchDrawing(Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/prompt_background.png")), 2, 2)
+name_prompt_bg = NPatchDrawing(
+    Texture.from_surface(
+        renderer,
+        pygame.image.load(assets_dir + "img/ui/prompt_background.png")), 2, 2)
 # keeps track of an error that says that the name is too short
 show_name_enter_error_timer = 0
 
@@ -96,14 +111,14 @@ show_name_enter_error_timer = 0
 lastTime = time.time()
 
 # used to keep track of the level time (in ms)
-level_time = 3 * 60 * 1000 # 3 minutes
+level_time = 3 * 60 * 1000  # 3 minutes
 # keeps track of the coins collected
 level_score = 0
 
 while True:
     # calculate the delta time
     currentTime = time.time()
-    deltaTime: float = (currentTime - lastTime) * 1000 # time in ms
+    deltaTime: float = (currentTime - lastTime) * 1000  # time in ms
     lastTime: float = currentTime
     #print(f"{deltaTime} ms") -- could use for stats reporting
 
@@ -128,9 +143,11 @@ while True:
                             if len(name) == 5:
                                 print(f"User entered name: {name}")
                                 needs_name_input = False
-                                (top_names, top_scores) = high_scores.add_high_score(name, score)
+                                (top_names,
+                                 top_scores) = high_scores.add_high_score(
+                                     name, score)
                             else:
-                                show_name_enter_error_timer = 2000 # two seconds
+                                show_name_enter_error_timer = 2000  # two seconds
                 else:
                     # key press
                     if event.key == K_r:
@@ -142,7 +159,7 @@ while True:
                         needs_name_input = False
                         score = 0
                         level_score = 0
-                        level_time = 3 * 60 * 1000 # 3 minutes
+                        level_time = 3 * 60 * 1000  # 3 minutes
                         tilemap.reset()
     # tick
     if state == GameState.PLAY:
@@ -161,15 +178,18 @@ while True:
             needs_name_input = False
             score = 0
             level_score = 0
-            level_time = 3 * 60 * 1000 # 3 minutes
+            level_time = 3 * 60 * 1000  # 3 minutes
             tilemap.reset()
 
         # if won
         if player_state == PlayerUpdate.WON:
             state = GameState.HIGH_SCORE_LIST
-            score = level_score + int(level_time // 1000) # coins picked up and the leftover time in seconds
+            score = level_score + int(
+                level_time //
+                50)  # coins picked up and the leftover time in seconds
             print(f"Player achieved score: {score}")
-            if high_scores.get_score_index(score, top_scores) < 5: # new high score!
+            if high_scores.get_score_index(score,
+                                           top_scores) < 5:  # new high score!
                 needs_name_input = True
                 name = ""
 
@@ -210,24 +230,32 @@ while True:
         # debug_texture.draw(dstrect=debug_texture.get_rect())
 
         # render score
-        score_texture = Texture.from_surface(renderer, small_score_font.render(f"Score: {level_score}", True, WHITE))
+        score_texture = Texture.from_surface(
+            renderer,
+            small_score_font.render(f"Score: {level_score}", True, WHITE))
         score_texture.draw(dstrect=score_texture.get_rect())
 
         minutes = int(level_time / (60 * 1000))
         seconds = int((level_time / 1000) % 60)
-        time_texture = Texture.from_surface(renderer, small_score_font.render(f"Time: {minutes}:{seconds}", True, WHITE))
+        time_texture = Texture.from_surface(
+            renderer,
+            small_score_font.render(f"Time: {minutes}:{seconds}", True, WHITE))
         time_texture_rect = time_texture.get_rect()
         time_texture_rect.x = window.size[0] - time_texture_rect.width
         time_texture.draw(dstrect=time_texture_rect)
 
         # timing info (debug)
-        debug_text = Texture.from_surface(renderer, small_score_font.render("MS/F: {:.2f}".format(deltaTime), False, WHITE))
+        debug_text = Texture.from_surface(
+            renderer,
+            small_score_font.render("MS/F: {:.2f}".format(deltaTime), False,
+                                    WHITE))
         debug_text.draw(dstrect=debug_text.get_rect().move(0, 20))
     elif state == GameState.INTRO_SEQ:
         intro_scene.render()
     elif state == GameState.HIGH_SCORE_LIST:
         # show the list of scores
-        header = Texture.from_surface(renderer, score_header_font.render("High Scores:", True, WHITE))
+        header = Texture.from_surface(
+            renderer, score_header_font.render("High Scores:", True, WHITE))
         header_rect = header.get_rect()
         header_rect.centerx = window.size[0] // 2
         header_rect.y = window.size[1] // 6
@@ -235,12 +263,15 @@ while True:
 
         for score_index in range(len(top_names)):
             score_str = f"{score_index + 1}. {top_names[score_index]}......{top_scores[score_index]}"
-            score_texture = Texture.from_surface(renderer, score_font.render(score_str, True, WHITE))
+            score_texture = Texture.from_surface(
+                renderer, score_font.render(score_str, True, WHITE))
             score_rect = score_texture.get_rect()
             score_rect.centerx = window.size[0] // 2
-            score_rect.y = (score_index * (score_rect.height + 5)) + header_rect.height + header_rect.y
+            score_rect.y = (
+                score_index *
+                (score_rect.height + 5)) + header_rect.height + header_rect.y
 
-            score_texture.draw(dstrect = score_rect)
+            score_texture.draw(dstrect=score_rect)
 
         if needs_name_input:
             # draw input box with the name
@@ -252,11 +283,14 @@ while True:
             name_prompt_bg.render(bounding_rect)
 
             # draw the prompt header
-            prompt_texture = Texture.from_surface(renderer, small_score_font.render("Enter your name:", True, WHITE))
+            prompt_texture = Texture.from_surface(
+                renderer,
+                small_score_font.render("Enter your name:", True, WHITE))
             prompt_texture_rect = prompt_texture.get_rect()
             prompt_texture_rect.centerx = window.size[0] // 2
-            prompt_texture_rect.centery = (window.size[1] // 2) - (1.5*prompt_texture_rect.height)
-            prompt_texture.draw(dstrect = prompt_texture_rect)
+            prompt_texture_rect.centery = (window.size[1] // 2) - (
+                1.5 * prompt_texture_rect.height)
+            prompt_texture.draw(dstrect=prompt_texture_rect)
 
             # draw the currently entered name (formatted, of course)
             name_formatted = ""
@@ -268,7 +302,8 @@ while True:
                 if i != 4:
                     name_formatted += " "
 
-            name_texture = Texture.from_surface(renderer, score_font.render(name_formatted, True, WHITE))
+            name_texture = Texture.from_surface(
+                renderer, score_font.render(name_formatted, True, WHITE))
             name_rect = name_texture.get_rect()
 
             name_rect.centerx = window.size[0] // 2
@@ -277,13 +312,19 @@ while True:
 
             # if there is an error, we also want to show that
             if show_name_enter_error_timer > 0:
-                error_texture = Texture.from_surface(renderer, score_font.render(" Your name must be 5 characters long. ", True, WHITE, RED))
+                error_texture = Texture.from_surface(
+                    renderer,
+                    score_font.render(" Your name must be 5 characters long. ",
+                                      True, WHITE, RED))
                 error_texture_rect = error_texture.get_rect()
                 error_texture_rect.centerx = window.size[0] // 2
-                error_texture_rect.y = window.size[1] - error_texture_rect.height
+                error_texture_rect.y = window.size[
+                    1] - error_texture_rect.height
                 error_texture.draw(dstrect=error_texture_rect)
         else:
-            restart_prompt = Texture.from_surface(renderer, score_font.render("Press R to restart.", True, WHITE))
+            restart_prompt = Texture.from_surface(
+                renderer, score_font.render("Press R to restart.", True,
+                                            WHITE))
             restart_prompt_rect = restart_prompt.get_rect()
             restart_prompt_rect.centerx = window.size[0] // 2
             restart_prompt_rect.centery = (window.size[1] // 6) * 5

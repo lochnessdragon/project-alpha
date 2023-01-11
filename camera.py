@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from pygame import Vector2
 import entity
+from utils import lerp
 
 class Camera:
     """
@@ -101,15 +102,19 @@ class PlayerCamera(Camera):
         self.min_x = 0
         self.max_x = tilemap._width * tilemap.spriteset.tile_width
         self.max_y = tilemap._height * tilemap.spriteset.tile_height
+        self.speed = 3
 
     def update(self, deltaTime: float):
         """
         A method to simply follow the player around
         """
+        deltaSeconds = deltaTime / 1000
         if self.position.x != self.follow_entity.transform.centerx:
-            self.position.x = self.follow_entity.transform.centerx
+            # lerp between the positions
+            self.position.x = lerp(self.position.x, self.follow_entity.transform.centerx, deltaSeconds * self.speed)
         if self.position.y != self.follow_entity.transform.centery:
-            self.position.y = self.follow_entity.transform.centery
+            # lerp between positions
+            self.position.y = lerp(self.position.y, self.follow_entity.transform.centery, deltaSeconds * self.speed)
 
         # cap the x and y positions
         self.position.x = max(self.position.x, self.min_x + (self._half_screen_size[0] // self.scale))
