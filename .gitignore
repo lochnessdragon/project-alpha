@@ -3,6 +3,8 @@ __pycache__
 profile.dat
 profile.txt
 .breakpoints
+# ignore new high scores
+high_scores.txt
 
 # ignore venv (even though replit thinks we should use it)
 venv
