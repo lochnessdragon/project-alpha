@@ -11,12 +11,11 @@ import camera
 class Tilemap(object):
     """Tilemap: manages and displays tiles in a map."""
 
-    def __init__(self, spriteset: SpriteSet, tileset_name: str, x: int, y: int, width: int,
+    def __init__(self, filename: str, spriteset: SpriteSet, tileset_name: str, x: int, y: int, width: int,
                  height: int):
+        self.filename = filename
         self.spriteset = spriteset
         self.position = pygame.Vector2(x, y)
-        # self.position.y -= 16 * 4
-        #self.scale = 4  # temp variable until I get cameras implemented
         self._width = width
         self._height = height
         self.tiles = [[1 for x in range(width)] for x in range(height)]
@@ -92,7 +91,7 @@ class Tilemap(object):
             )
 
         sprite_set = SpriteSet.from_file(tileset_filename, renderer)
-        tilemap = Tilemap(sprite_set, data["tileset"], 0, 0, map_width, map_height)
+        tilemap = Tilemap(json_filename, sprite_set, data["tileset"], 0, 0, map_width, map_height)
 
         # load tile ids into the map
         for y in range(map_height):
@@ -123,6 +122,18 @@ class Tilemap(object):
 
         with open(json_filename, "w") as file:
             json.dump(json_data, file, indent = "\t")
+    
+    def reset(self):
+        """
+        Reloads the tiles in the map from the source file
+        """
+        with open(self.filename) as file:
+            data = json.load(file)
+        # reload tile ids into the map
+        for y in range(self._height):
+            for x in range(self._width):
+                tile_id = data["tiles"][(y * self._width) + x]
+                self.set_tile(x, y, tile_id)
 
 
     def render(self, camera):

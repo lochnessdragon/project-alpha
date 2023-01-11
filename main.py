@@ -7,7 +7,7 @@ import pygame
 from pygame import Vector2
 from pygame.locals import *
 from pygame._sdl2.video import Window, Renderer, Texture
-from entity import Player, TestBall
+from entity import Player, TestBall, PlayerUpdate
 from spriteset import SpriteSet
 from tilemap import Tilemap
 import intro_cutscene as intro
@@ -96,7 +96,9 @@ show_name_enter_error_timer = 0
 lastTime = time.time()
 
 # used to keep track of the level time (in ms)
-level_time = 5 * 60 * 1000 # 5 minutes
+level_time = 3 * 60 * 1000 # 3 minutes
+# keeps track of the coins collected
+level_score = 0
 
 while True:
     # calculate the delta time
@@ -139,26 +141,39 @@ while True:
                         name = ""
                         needs_name_input = False
                         score = 0
-                        level_time = 5 * 60 * 1000 # 5 minutes
+                        level_score = 0
+                        level_time = 3 * 60 * 1000 # 3 minutes
+                        tilemap.reset()
     # tick
     if state == GameState.PLAY:
         level_time -= deltaTime
-        if player.update(deltaTime, tilemap):
-            player.transform.x = spawn_pos.x
-            player.transform.y = spawn_pos.y
-            name = ""
-            needs_name_input = False
-            score = 0
-            level_time = 5 * 60 * 1000 # 5 minutes
-        camera.update(deltaTime)
+        (added_score, player_state) = player.update(deltaTime, tilemap)
+        level_score += added_score
+
+        # stop when out of tile
         if level_time < 0:
-            # out of time
+            player_state = PlayerUpdate.DIED
+
+        if player_state == PlayerUpdate.DIED:
             player.transform.x = spawn_pos.x
             player.transform.y = spawn_pos.y
             name = ""
             needs_name_input = False
             score = 0
-            level_time = 5 * 60 * 1000 # 5 minutes
+            level_score = 0
+            level_time = 3 * 60 * 1000 # 3 minutes
+            tilemap.reset()
+
+        # if won
+        if player_state == PlayerUpdate.WON:
+            state = GameState.HIGH_SCORE_LIST
+            score = level_score + int(level_time // 1000) # coins picked up and the leftover time in seconds
+            print(f"Player achieved score: {score}")
+            if high_scores.get_score_index(score, top_scores) < 5: # new high score!
+                needs_name_input = True
+                name = ""
+
+        camera.update(deltaTime)
     elif state == GameState.INTRO_SEQ:
         if intro_scene.update(deltaTime):
             # animation is done
@@ -195,7 +210,7 @@ while True:
         # debug_texture.draw(dstrect=debug_texture.get_rect())
 
         # render score
-        score_texture = Texture.from_surface(renderer, small_score_font.render(f"Score: {score}", True, WHITE))
+        score_texture = Texture.from_surface(renderer, small_score_font.render(f"Score: {level_score}", True, WHITE))
         score_texture.draw(dstrect=score_texture.get_rect())
 
         minutes = int(level_time / (60 * 1000))
@@ -204,6 +219,10 @@ while True:
         time_texture_rect = time_texture.get_rect()
         time_texture_rect.x = window.size[0] - time_texture_rect.width
         time_texture.draw(dstrect=time_texture_rect)
+
+        # timing info (debug)
+        debug_text = Texture.from_surface(renderer, small_score_font.render("MS/F: {:.2f}".format(deltaTime), False, WHITE))
+        debug_text.draw(dstrect=debug_text.get_rect().move(0, 20))
     elif state == GameState.INTRO_SEQ:
         intro_scene.render()
     elif state == GameState.HIGH_SCORE_LIST:
@@ -268,5 +287,6 @@ while True:
             restart_prompt_rect = restart_prompt.get_rect()
             restart_prompt_rect.centerx = window.size[0] // 2
             restart_prompt_rect.centery = (window.size[1] // 6) * 5
+            restart_prompt.draw(dstrect=restart_prompt_rect)
 
     renderer.present()

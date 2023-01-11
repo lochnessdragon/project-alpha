@@ -24,6 +24,8 @@ class SpriteSet(object):
         self.tiles_per_col = int(self.texture.height / tile_height)
         self.solid_tiles = []
         self.deadly_tiles = []
+        self.goal_tile = None
+        self.score_tiles = []
         self._max_tile_id = self.tiles_per_row * self.tiles_per_col
 
     def get_max_tile_id(self) -> int:
@@ -57,6 +59,13 @@ class SpriteSet(object):
         if "deadly" in data.keys():
             for id in data["deadly"]:
                 sprite_set.deadly_tiles.append(id)
+        
+        if "score_pickup" in data.keys():
+            for id in data["score_pickup"]:
+                sprite_set.score_tiles.append(id)
+        
+        if "goal" in data.keys():
+            sprite_set.goal_tile = data["goal"]
 
         return sprite_set
 

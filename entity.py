@@ -1,3 +1,5 @@
+from enum import Enum
+
 import pygame
 from pygame._sdl2.video import Renderer, Texture
 from pygame.locals import *
@@ -31,6 +33,11 @@ class Entity:
             self.renderer.draw_rect(camera.transform(self.transform))
         self.texture.draw(dstrect = camera.transform(self.transform), angle=self.angle, origin=self.origin, flipX=self.flipX, flipY=self.flipY)
 
+class PlayerUpdate(Enum):
+    NONE = 0
+    DIED = 1
+    WON = 2 # has the player reached the end goal
+
 class Player(Entity):
     def __init__(self, renderer: Renderer, assets_dir: str, tilemap: Tilemap):
         super().__init__(renderer, assets_dir + "img/player.png")
@@ -42,12 +49,18 @@ class Player(Entity):
         self.min_x = 0
         self.max_x = (tilemap._width * tilemap.spriteset.tile_width) - self.transform.width
         self.max_y = (tilemap._height * tilemap.spriteset.tile_height) - self.transform.height
+        self.jump_sound = pygame.mixer.Sound(assets_dir + "audio/jump.wav")
+        self.coin_sound = pygame.mixer.Sound(assets_dir + "audio/pickup.wav")
+        self.death_sound = pygame.mixer.Sound(assets_dir + "audio/death.wav")
 
-    def update(self, deltaTime: float, tilemap: Tilemap) -> bool:
+    def update(self, deltaTime: float, tilemap: Tilemap) -> (int, PlayerUpdate):
         """
-        player update method, returns true if the player has died (i.e. should reset the level)
+        player update method, returns a tuple containing the score addition (for coins collected) and a PlayerUpdate enum value
         """
         super().update(deltaTime, tilemap)
+        update_value = PlayerUpdate.NONE
+        additional_score = 0 # keeps track of coin pickups
+
         adjTime = deltaTime / 10
         # react to keys pressed
         pressed_keys = pygame.key.get_pressed()
@@ -60,6 +73,7 @@ class Player(Entity):
         if pressed_keys[K_UP]:
             if self.collider.grounded:
                 self.collider.velocity.y -= self.jump_force # up is negative (yes, its confusing)
+                self.jump_sound.play()
 
         # flip player
         if self.collider.velocity.x < 0:
@@ -77,28 +91,39 @@ class Player(Entity):
 
         # check lose conditions
         if self.transform.y > self.max_y:
-            return True # fallen through floor
+            update_value = PlayerUpdate.DIED# fallen through floor
+            self.death_sound.play()
 
-        # check deadly tiles
+        # check important tiles (goal, coins, deadly tiles)
         # transform the player's coordinates to tilemap coords
         tilemap_x_coord: int = int((self.transform.centerx - \
                          tilemap.position.x) // tilemap.spriteset.tile_width)
         tilemap_y_coord: int = int((self.transform.centery - \
                          tilemap.position.y) // tilemap.spriteset.tile_height)
-        # check 3x3 cube centered on player
+        # check 3x3 cube centered on player for deadly tiles, coins or the goal
         for y in range(-1, 2):
             for x in range(-1, 2):
                 tilemap_x_adj = tilemap_x_coord + x
                 tilemap_y_adj = tilemap_y_coord + y
                 try:
-                    if tilemap.is_deadly(tilemap_x_adj, tilemap_y_adj):
-                        # check collision
-                        tile_rect=Rect((tilemap_x_adj * tilemap.spriteset.tile_width) + tilemap.position.x, (tilemap_y_adj * tilemap.spriteset.tile_height) + tilemap.position.y, tilemap.spriteset.tile_width, tilemap.spriteset.tile_height)
-                        # check for the players collision
-                        if self.transform.colliderect(tile_rect):
-                            return True
+                    # check collision
+                    tile_rect=Rect((tilemap_x_adj * tilemap.spriteset.tile_width) + tilemap.position.x, (tilemap_y_adj * tilemap.spriteset.tile_height) + tilemap.position.y, tilemap.spriteset.tile_width, tilemap.spriteset.tile_height)
+                    # check for the players collision
+                    if self.transform.colliderect(tile_rect):
+                        tile_id = tilemap.get_tile(tilemap_x_adj, tilemap_y_adj)
+                        if tile_id in tilemap.spriteset.deadly_tiles: # spikes
+                            update_value = PlayerUpdate.DIED
+                            self.death_sound.play()
+                        if tile_id in tilemap.spriteset.score_tiles: # score
+                            tilemap.set_tile(tilemap_x_adj, tilemap_y_adj, -1) # clear tile
+                            additional_score += 100 # 100 per coin
+                            self.coin_sound.play()
+                        if tile_id == tilemap.spriteset.goal_tile: # win!
+                            update_value = PlayerUpdate.WON
                 except:
                     continue
+
+        return (additional_score, update_value)
 
 class TestBall(Entity):
     def __init__(self, renderer: Renderer, assets_dir: str):

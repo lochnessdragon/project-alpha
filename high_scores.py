@@ -18,9 +18,14 @@ def get_high_scores() -> ([str], [int]):
 
 def get_score_index(score, scores):
     """
-    get_score_index - returns the index that a new score should be added at. If its greater than 4, you should ignore the result
+    get_score_index - returns the index that a new score should be added at. If its greater than 4, then the score is smaller than anyone else on the board
     """
-    pass
+    insert_location = 0
+    for i in range(len(scores)):
+        if scores[i] < score:
+            break
+        insert_location += 1
+    return insert_location
 
 def add_high_score(name, score) -> ([str], [int]):
     """
@@ -29,11 +34,8 @@ def add_high_score(name, score) -> ([str], [int]):
     """
     names, scores = get_high_scores()
 
-    insert_location = 0
-    for i in range(len(scores)):
-        if scores[i] < score:
-            break
-        insert_location += 1
+    insert_location = get_score_index(score, scores)
+
     if insert_location < 5:
         names.insert(insert_location, name)
         scores.insert(insert_location,score)
@@ -42,7 +44,7 @@ def add_high_score(name, score) -> ([str], [int]):
             scores.pop()
         with open("high_scores.txt", "w") as file:
             for i in range(len(names)):
-                file.write(names[i] + ", " + str(scores[i]))
+                file.write(names[i] + ", " + str(int(scores[i])))
                 if i < len(names)-1:
                     file.write("\n")
     return (names, scores)
