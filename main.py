@@ -239,7 +239,7 @@ while True:
         seconds = int((level_time / 1000) % 60)
         time_texture = Texture.from_surface(
             renderer,
-            small_score_font.render(f"Time: {minutes}:{seconds}", True, WHITE))
+            small_score_font.render(f"Time: {minutes}:{seconds:02}", True, WHITE))
         time_texture_rect = time_texture.get_rect()
         time_texture_rect.x = window.size[0] - time_texture_rect.width
         time_texture.draw(dstrect=time_texture_rect)

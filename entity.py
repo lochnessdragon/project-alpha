@@ -5,6 +5,7 @@ from pygame._sdl2.video import Renderer, Texture
 from pygame.locals import *
 from physics import PhysicsCollider
 from tilemap import Tilemap
+from animation import TileAnimation
 import camera
 import utils
 from spriteset import SpriteSet
@@ -43,15 +44,29 @@ class PlayerUpdate(Enum):
 class Player(Entity):
     def __init__(self, renderer: Renderer, assets_dir: str, tilemap: Tilemap, start_pos: pygame.Vector2):
         super().__init__(renderer, SpriteSet(renderer, assets_dir + "img/spritesheet/explorer_sheet.png", 16, 16))
+        # set start position
         self.transform.x = start_pos.x
         self.transform.y = start_pos.y
+
+        # physics vars
         self.speed = 5
         self.max_speed = 20
         self.jump_force = 15
         self.friction = 0.05
+
+        # bounds vars
         self.min_x = 0
         self.max_x = (tilemap._width * tilemap.spriteset.tile_width) - self.transform.width
         self.max_y = (tilemap._height * tilemap.spriteset.tile_height) - self.transform.height
+
+        # animations
+        self.idle_animation = TileAnimation(0, 3, 400) # breathing 
+        self.walk_animation = TileAnimation(4, 11, 100) # running
+        self.jump_animation = TileAnimation(12, 15, 1000) # jumping
+        self.current_animation = self.idle_animation
+        
+        # sounds
+        #self.walk_sound
         self.jump_sound = pygame.mixer.Sound(assets_dir + "audio/jump.wav")
         self.coin_sound = pygame.mixer.Sound(assets_dir + "audio/pickup.wav")
         self.death_sound = pygame.mixer.Sound(assets_dir + "audio/death.wav")
@@ -78,6 +93,18 @@ class Player(Entity):
                 self.collider.velocity.y -= self.jump_force # up is negative (yes, its confusing)
                 self.jump_sound.play()
 
+        # update animation
+        if abs(self.collider.velocity.x) > 0:
+            if self.current_animation != self.walk_animation:
+                self.current_animation.reset()
+                self.current_animation = self.walk_animation
+        else:
+            if self.current_animation != self.idle_animation:
+                self.current_animation.reset()
+                self.current_animation = self.idle_animation
+        
+        self.sprite_id = self.current_animation.update(deltaTime, self)
+                
         # flip player
         if self.collider.velocity.x < 0:
             self.flipX = True
