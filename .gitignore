@@ -1,4 +1,8 @@
 __pycache__
+# ignore profiling info
+profile.dat
+profile.txt
+.breakpoints
 
 # ignore venv (even though replit thinks we should use it)
 venv

@@ -11,8 +11,8 @@ import camera
 class Tilemap(object):
     """Tilemap: manages and displays tiles in a map."""
 
-    def __init__(self, filename: str, spriteset: SpriteSet, tileset_name: str, x: int, y: int, width: int,
-                 height: int):
+    def __init__(self, filename: str, spriteset: SpriteSet, tileset_name: str,
+                 x: int, y: int, width: int, height: int):
         self.filename = filename
         self.spriteset = spriteset
         self.position = pygame.Vector2(x, y)
@@ -28,14 +28,15 @@ class Tilemap(object):
             for row in range(self._height):
                 for col in range(self._width):
                     if col >= len(self.tiles[row]):
-                        self.tiles[row].append(0)
+                        self.tiles[row].append(-1)  # add an air tile
 
         if y >= self._height:
             # increase the tilemap's range
             self._height += (y - (self._height - 1))
             for row in range(self._height):
                 if row >= len(self.tiles):
-                    self.tiles.append([0 for col in range(self._width)])
+                    self.tiles.append([-1 for col in range(self._width)
+                                       ])  # add a bunch of air tiles
         self.tiles[y][x] = id
 
     def get_tile(self, x: int, y: int) -> int:
@@ -91,7 +92,8 @@ class Tilemap(object):
             )
 
         sprite_set = SpriteSet.from_file(tileset_filename, renderer)
-        tilemap = Tilemap(json_filename, sprite_set, data["tileset"], 0, 0, map_width, map_height)
+        tilemap = Tilemap(json_filename, sprite_set, data["tileset"], 0, 0,
+                          map_width, map_height)
 
         # load tile ids into the map
         for y in range(map_height):
@@ -121,8 +123,8 @@ class Tilemap(object):
         }
 
         with open(json_filename, "w") as file:
-            json.dump(json_data, file, indent = "\t")
-    
+            json.dump(json_data, file, indent="\t")
+
     def reset(self):
         """
         Reloads the tiles in the map from the source file
@@ -135,17 +137,41 @@ class Tilemap(object):
                 tile_id = data["tiles"][(y * self._width) + x]
                 self.set_tile(x, y, tile_id)
 
-
     def render(self, camera):
         """Renders the tilemap to the screen"""
-        for y in range(len(self.tiles)):
-            for x in range(len(self.tiles[y])):
-                if self.tiles[y][x] != -1: # ignore empty tiles
+        # we should be able to skip tiles that are outside the screen (optimization)
+        min_x = -camera._half_screen_size[0]  # furthest left pixel (x)
+        # convert screen to world coordinates
+        min_x /= camera.scale
+        min_x += camera.position.x
+        min_x /= self.spriteset.tile_width
+        min_x = int(min_x)
+        min_x = max(min_x, 0)
+
+        max_x = camera._half_screen_size[0]  # furthest right pixel (x)
+        # screen -> world (literally an inverse of the camera transform calculation)
+        max_x /= camera.scale
+        max_x += camera.position.x
+        max_x /= self.spriteset.tile_width
+        max_x = int(max_x)
+        max_x = min(max_x + 1, self._width)
+
+        # lets do this 2 more times!
+        min_y = -camera._half_screen_size[1]
+        min_y = int(((min_y / camera.scale) + camera.position.y) /
+                    self.spriteset.tile_height)
+        min_y = max(min_y, 0)
+
+        max_y = int((
+            (camera._half_screen_size[1] / camera.scale) + camera.position.y) /
+                    self.spriteset.tile_height)
+        max_y = min(max_y + 1, self._height)
+
+        for y in range(min_y, max_y):
+            for x in range(min_x, max_x):
+                if self.tiles[y][x] != -1:  # ignore empty tiles
                     rect = Rect(
-                        self.position.x +
-                        (x * self.spriteset.tile_width),
-                        self.position.y +
-                        (y * self.spriteset.tile_height),
-                        self.spriteset.tile_width,
-                        self.spriteset.tile_height)
+                        self.position.x + (x * self.spriteset.tile_width),
+                        self.position.y + (y * self.spriteset.tile_height),
+                        self.spriteset.tile_width, self.spriteset.tile_height)
                     self.spriteset.draw(self.tiles[y][x], camera.transform(rect))

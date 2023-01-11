@@ -52,7 +52,7 @@ window = Window("Project Alpha")
 window_icon = pygame.image.load(assets_dir + "img/ui/window_icon.png")
 window.set_icon(window_icon)
 
-renderer = Renderer(window, accelerated=1, vsync=True)
+renderer = Renderer(window, accelerated=1, vsync=False)
 
 # game objects
 tilemap = Tilemap.from_file(assets_dir + "levels/level_00", tileset_dir, renderer)
