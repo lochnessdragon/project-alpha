@@ -1,3 +1,4 @@
+# I wanted to implement this but I didn't have time to
 import pygame
 from pygame.locals import *
 from pygame._sdl2.video import Renderer, Texture, Window

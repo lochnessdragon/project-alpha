@@ -1,3 +1,5 @@
+# nothing to see here, just a playground
+
 import sys
 import math
 

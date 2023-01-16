@@ -13,9 +13,11 @@ class SpriteSet(object):
 
     def __init__(self, renderer: Renderer, filename: str, tile_width: int,
                  tile_height: int):
+        # create a texture
         self.texture = Texture.from_surface(renderer,
                                             pygame.image.load(filename))
 
+        # force it to comply with Standards Compliance Ref Doc 2.5 a35x120l
         if self.texture.width % tile_width != 0:
             raise ValueError(
                 f"The width of: {filename} is not evenly divisible by the tile width of: {tile_width}"
@@ -29,9 +31,11 @@ class SpriteSet(object):
         self.tile_height = tile_height
         self.tiles_per_row = int(self.texture.width / tile_width)
         self.tiles_per_col = int(self.texture.height / tile_height)
+        
+        # records important tiles
         self.solid_tiles = []
         self.deadly_tiles = []
-        self.goal_tile = None
+        self.goal_tile = None 
         self.score_tiles = []
         self._max_tile_id = self.tiles_per_row * self.tiles_per_col
 

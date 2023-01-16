@@ -20,6 +20,9 @@ class IntroState(Enum):
     CRASH_SCENE = 6
 
 class IntroCutscene:
+    """
+    IntroCutscene: takes control away from the main file for a while in order to show a cool animation!
+    """
     def __init__(self, assets_dir: str, renderer: Renderer, debug_font: pygame.font.Font, main_font_filename: str, screen_size: (int, int)):
         self.sunrise_audio = pygame.mixer.Sound(assets_dir + "audio/sunrise.ogg")
         self.timer = 0
@@ -175,5 +178,5 @@ class IntroCutscene:
             self.renderer.draw_color = SKY_COLOR
             self.renderer.fill_rect(self.window_rect)
 
-            # draw capsule
+            # draw space capsule
             self.capsule_texture.draw(dstrect=self.capsule_rect)

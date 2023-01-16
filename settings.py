@@ -1,3 +1,5 @@
+# I wanted to implement a menu system with settings, but it's not in the alpha release
+
 from enum import Enum
 import types
 

@@ -22,6 +22,9 @@ class PhysicsCollider:
         self.draw = False
 
     def update(self, deltaTime: float, tilemap: Tilemap):
+        """
+        update: moves the physics collider in regard to Newtonian motion across the 4th dimension (time)
+        """
         adjTime = deltaTime / 100
         if not self.is_static:
             # reset grounded state
@@ -42,13 +45,13 @@ class PhysicsCollider:
             # test collider
             player_rect_test_x = self.entity.transform.move(self.velocity.x * adjTime, 0)
             player_rect_test_y = self.entity.transform.move(0, self.velocity.y * adjTime)
+            #print(f"Test y: {player_rect_test_y.y}")
 
             # check for collisions on the y axis
             # positive is down
-            velocity_y_sign=sign(self.velocity.y)
+            velocity_y_sign = sign(self.velocity.y)
             if velocity_y_sign != 0:
-                tilemap_y_adj=tilemap_y_coord + velocity_y_sign
-
+                tilemap_y_adj = tilemap_y_coord + velocity_y_sign
                 for x in range(-1, 2):
                     tilemap_x_adj = tilemap_x_coord + x
                     try:
@@ -59,7 +62,9 @@ class PhysicsCollider:
                             if player_rect_test_y.colliderect(tile_rect):
                                 # set the player's y position to be right on top of the block
                                 if velocity_y_sign > 0: # i.e. we hit the block on our bottom
+                                    #print(f"Tile Y: {tile_rect.y}")
                                     self.entity.transform.y = tile_rect.y - self.entity.transform.height
+                                    #print("Entity Y:", self.entity.transform.y)
                                 else: # we hit the block on our top
                                     self.entity.transform.y = tile_rect.y + tile_rect.height - 1
                                 self.velocity.y = 0
@@ -104,5 +109,4 @@ class PhysicsCollider:
             self.velocity.y += self.acceleration.y * adjTime
 
             # if the collider is not grounded, apply gravity
-            if not self.grounded:
-                self.acceleration.y=self.gravity
+            self.acceleration.y=self.gravity

@@ -57,6 +57,7 @@ def reset_high_scores():
     return
 
 if __name__ == '__main__':
+    # testing code
     passed = True
 
     reset_high_scores()

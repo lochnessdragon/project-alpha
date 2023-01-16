@@ -1,3 +1,5 @@
+# this is some cool editor code. Try it if you like! :)
+
 import sys, math, os, time
 from enum import Enum
 from pathlib import Path
@@ -47,9 +49,11 @@ if __name__ == '__main__':
     print("Editor v1")
     pygame.init()
 
+    # find the assets directory
     assets_dir = str(source_file.parent.parent.joinpath("assets/")) + "/"
     print(assets_dir)
 
+    # basic screen stuff
     window = Window("Project Alpha - Editor")
     half_screen_size = (window.size[0] // 2, window.size[1] // 2)
 
@@ -57,6 +61,7 @@ if __name__ == '__main__':
     window_icon = pygame.image.load(assets_dir + "img/ui/window_icon.png")
     window.set_icon(window_icon)
 
+    # basic rendering things (_sdl2 in pygame. OOOOHHH experimental)
     renderer = Renderer(window, accelerated=1, vsync=True)
     CLEAR_COLOR = Color(50, 50, 50, 255)
     WHITE = (255, 255, 255)
@@ -79,6 +84,7 @@ if __name__ == '__main__':
         renderer, pygame.image.load(assets_dir + "img/ui/eraser_icon.png"))
     bucket_fill_icon = Texture.from_surface(renderer, pygame.image.load(assets_dir + "img/ui/fill_icon.png"))
 
+    # buttons
     button_0_texture = Texture.from_surface(
         renderer, pygame.image.load(assets_dir + "img/ui/button_0.png"))
     button_0_patch = ui.NPatchDrawing(button_0_texture, 3, 3)

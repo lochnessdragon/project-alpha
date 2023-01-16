@@ -9,6 +9,7 @@ from animation import TileAnimation
 import camera
 import utils
 from spriteset import SpriteSet
+from input import Input
 
 """
 Represents a basic "unit" of the game.
@@ -27,10 +28,16 @@ class Entity:
         self.collider = PhysicsCollider(self);
 
     def update(self, deltaTime: float, tilemap: Tilemap):
+        """
+        update: updates the entity's physics
+        """
         # update physics
         self.collider.update(deltaTime, tilemap)
 
     def render(self, camera):
+        """
+        render: draws the entity to the screen
+        """
         if self.collider.draw:
             self.renderer.draw_color = Color(255, 0, 0, 255)
             self.renderer.draw_rect(camera.transform(self.transform))
@@ -51,7 +58,7 @@ class Player(Entity):
         # physics vars
         self.speed = 5
         self.max_speed = 20
-        self.jump_force = 15
+        self.jump_force = 17
         self.friction = 0.05
 
         # bounds vars
@@ -60,11 +67,11 @@ class Player(Entity):
         self.max_y = (tilemap._height * tilemap.spriteset.tile_height) - self.transform.height
 
         # animations
-        self.idle_animation = TileAnimation(0, 3, 400) # breathing 
+        self.idle_animation = TileAnimation(0, 3, 400) # breathing
         self.walk_animation = TileAnimation(4, 11, 100) # running
-        self.jump_animation = TileAnimation(12, 15, 1000) # jumping
+        self.jump_animation = TileAnimation(12, 14, 250) # jumping
         self.current_animation = self.idle_animation
-        
+
         # sounds
         #self.walk_sound
         self.jump_sound = pygame.mixer.Sound(assets_dir + "audio/jump.wav")
@@ -82,19 +89,23 @@ class Player(Entity):
         adjTime = deltaTime / 10
         # react to keys pressed
         pressed_keys = pygame.key.get_pressed()
-        if pressed_keys[K_LEFT]:
-            self.collider.velocity.x -= self.speed
-            self.collider.velocity.x = max(-self.max_speed,  self.collider.velocity.x)
-        if pressed_keys[K_RIGHT]:
-            self.collider.velocity.x += self.speed
-            self.collider.velocity.x = min(self.max_speed,  self.collider.velocity.x)
-        if pressed_keys[K_UP]:
+        
+        move_axis = Input.get_move()
+        self.collider.velocity.x += move_axis * self.speed * adjTime
+        self.collider.velocity.x = max(-self.max_speed,  self.collider.velocity.x)
+        self.collider.velocity.x = min(self.max_speed,  self.collider.velocity.x)
+        
+        if Input.get_jump():
             if self.collider.grounded:
                 self.collider.velocity.y -= self.jump_force # up is negative (yes, its confusing)
                 self.jump_sound.play()
 
         # update animation
-        if abs(self.collider.velocity.x) > 0:
+        if not self.collider.grounded:
+            if self.current_animation != self.jump_animation:
+                self.current_animation.reset()
+                self.current_animation = self.jump_animation
+        elif abs(self.collider.velocity.x) > 0:
             if self.current_animation != self.walk_animation:
                 self.current_animation.reset()
                 self.current_animation = self.walk_animation
@@ -102,9 +113,9 @@ class Player(Entity):
             if self.current_animation != self.idle_animation:
                 self.current_animation.reset()
                 self.current_animation = self.idle_animation
-        
+
         self.sprite_id = self.current_animation.update(deltaTime, self)
-                
+
         # flip player
         if self.collider.velocity.x < 0:
             self.flipX = True
@@ -155,6 +166,7 @@ class Player(Entity):
 
         return (additional_score, update_value)
 
+# testing entity
 class TestBall(Entity):
     def __init__(self, renderer: Renderer, assets_dir: str):
         super().__init__(renderer, assets_dir + "img/ball.png")

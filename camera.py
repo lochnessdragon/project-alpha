@@ -23,6 +23,12 @@ class Camera:
         """
         pass
 
+    def on_resize(self, width: int, height: int):
+        """
+        on_resize - a callback method to update the camera when the screen size changes
+        """
+        self._half_screen_size = (width // 2, height // 2)
+
     def transform(self, rect: Rect) -> Rect:
         """
         transform: moves the rect to the correct position based on the camera's information
@@ -110,7 +116,7 @@ class PlayerCamera(Camera):
         """
         deltaSeconds = deltaTime / 1000
         if self.position.x != self.follow_entity.transform.centerx:
-            # lerp between the positions
+            # lerp between the positions (animation)
             self.position.x = lerp(self.position.x, self.follow_entity.transform.centerx, deltaSeconds * self.speed)
         if self.position.y != self.follow_entity.transform.centery:
             # lerp between positions
@@ -120,3 +126,7 @@ class PlayerCamera(Camera):
         self.position.x = max(self.position.x, self.min_x + (self._half_screen_size[0] // self.scale))
         self.position.x = min(self.position.x, self.max_x - (self._half_screen_size[0] // self.scale))
         self.position.y = min(self.position.y, self.max_y - (self._half_screen_size[1] // self.scale))
+
+    def on_resize(self, width: int, height: int):
+        super().on_resize(width, height)
+        self.scale = width / 256
